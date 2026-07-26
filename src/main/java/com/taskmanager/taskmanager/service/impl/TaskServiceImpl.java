@@ -6,12 +6,16 @@ import com.taskmanager.taskmanager.entity.Task;
 import com.taskmanager.taskmanager.exception.TaskNotFoundException;
 import com.taskmanager.taskmanager.repository.TaskRepository;
 import com.taskmanager.taskmanager.service.TaskService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class TaskServiceImpl implements TaskService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
 
@@ -30,11 +34,16 @@ public class TaskServiceImpl implements TaskService {
 
         task = taskRepository.save(task);
 
+        logger.info("Task created successfully with id {}", task.getId());
+
         return mapToResponse(task);
     }
 
     @Override
     public List<TaskResponse> getAllTasks() {
+
+        logger.info("Fetching all tasks");
+
         return taskRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
@@ -43,6 +52,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse getTaskById(Long id) {
+
+        logger.info("Fetching task with id {}", id);
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -62,6 +73,8 @@ public class TaskServiceImpl implements TaskService {
 
         task = taskRepository.save(task);
 
+        logger.info("Task updated successfully with id {}", task.getId());
+
         return mapToResponse(task);
     }
 
@@ -73,6 +86,19 @@ public class TaskServiceImpl implements TaskService {
         }
 
         taskRepository.deleteById(id);
+
+        logger.info("Task deleted successfully with id {}", id);
+    }
+
+    @Override
+    public List<TaskResponse> searchTasks(String title) {
+
+        logger.info("Searching tasks with title containing '{}'", title);
+
+        return taskRepository.findByTitleContainingIgnoreCase(title)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private TaskResponse mapToResponse(Task task) {
